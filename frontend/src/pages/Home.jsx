@@ -4,11 +4,12 @@ import HeroSection from '../components/heroSection'
 import FileUploadComponent from '../components/upload'
 
 const Home = () => {
+  const isAuthenticated = false; 
   return (
     <div>
            <Navbar />
     <HeroSection/>
-    <FileUploadComponent/>
+    <FileUploadComponent isAuthenticated={isAuthenticated} />
     </div>
   )
 }
