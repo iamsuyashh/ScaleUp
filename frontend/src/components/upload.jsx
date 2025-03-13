@@ -10,6 +10,11 @@ const FileUploadComponent = () => {
     const [error, setError] = useState(null);
 
     const handleFileInput = async (e) => {
+        if (!isSignedIn) {
+            navigate("/sign-in");
+            return;
+        }
+
         const file = e.target.files[0];
         if (!file) return;
     
@@ -39,8 +44,6 @@ const FileUploadComponent = () => {
         setUploading(false);
     };
     
-    
-
     return (
         <div className="max-w-md mx-auto p-6">
             <h1 className="text-2xl font-semibold text-center mb-4">Upload CSV</h1>
