@@ -11,7 +11,6 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# Store processed data in memory (temporary solution, use a database for production)
 processed_data_store = {}
 model_store = {}
 scaler_store = {}
@@ -121,17 +120,23 @@ def feature_importance():
 
 
 # 📤 Export Processed Data as CSV
+# 📤 Export Processed Data as CSV
 @app.route('/export-data', methods=['GET'])
 def export_data():
-    """ Export processed data as a downloadable CSV """
+    """ Export processed data as a downloadable CSV without duplicates """
     if "processed_data" not in processed_data_store:
         return jsonify({"error": "No processed data available"}), 400
 
     df = pd.DataFrame(processed_data_store["processed_data"])
+    
+    # Drop duplicate rows based on all columns
+    df = df.drop_duplicates()
+
     csv_file_path = "processed_data.csv"
     df.to_csv(csv_file_path, index=False)
 
     return send_file(csv_file_path, as_attachment=True)
+
 
 
 # 🔄 Compare Business Growth

@@ -39,6 +39,24 @@ const Dashboard = () => {
   const [avgGrowthRate, setAvgGrowthRate] = useState(0);
   const [totalBusinesses, setTotalBusinesses] = useState(0);
 
+
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+          <p className="font-semibold">{data.Business_Name}</p>
+          <p>Growth Rate: {data["Growth_Rate (%)"].toFixed(2)}%</p>
+          <p>Revenue Growth Rate: {data.Revenue_Growth_Rate.toFixed(2)}%</p>
+          <p>Asset Growth Rate: {data.Asset_Growth_Rate.toFixed(2)}%</p>
+          <p>Loan Dependency Ratio: {data.Loan_Dependency_Ratio.toFixed(2)}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   useEffect(() => {
     const fetchProcessedData = async () => {
       try {
@@ -87,9 +105,9 @@ const Dashboard = () => {
       alert("No data available to export.");
       return;
     }
-  
+
     const headers = Object.keys(filteredData[0]).join(",") + "\n";
-  
+
     const csvRows = filteredData
       .map((row) =>
         Object.values(row)
@@ -97,7 +115,7 @@ const Dashboard = () => {
           .join(",")
       )
       .join("\n");
-  
+
     const csvContent = "data:text/csv;charset=utf-8," + headers + csvRows;
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -107,7 +125,7 @@ const Dashboard = () => {
     link.click();
     document.body.removeChild(link);
   };
-  
+
 
   return (
     <>
@@ -134,23 +152,24 @@ const Dashboard = () => {
               />
               <span className="text-gray-700">{filterRange}%</span>
               {/* 📤 Export to CSV Button */}
-<div className="bg-white p-4 rounded-xl shadow-md flex justify-end">
-  <button
-    onClick={exportToCSV}
-    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-  >
-    Export Filtered Data to CSV
-  </button>
-</div>
+              <div className="bg-white p-4 rounded-xl shadow-md flex justify-end">
+                <button
+                  onClick={exportToCSV}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md transition-transform transform hover:scale-105 hover:bg-blue-700"
+                >
+                  Export Filtered Data to CSV
+                </button>
+
+              </div>
 
             </div>
 
             {/* 📊 Summary Info */}
             <div className="bg-white p-4 rounded-xl shadow-md flex justify-between">
-            <p className="text-gray-700">
-  <span className="font-semibold">Percentage of Businesses:</span>{" "}
-  {((totalBusinesses / growthData.length) * 100).toFixed(2)}%
-</p>
+              <p className="text-gray-700">
+                <span className="font-semibold">Percentage of Businesses:</span>{" "}
+                {((totalBusinesses / growthData.length) * 100).toFixed(2)}%
+              </p>
               <p className="text-gray-700">
                 <span className="font-semibold">Average Growth Rate:</span>{" "}
                 {avgGrowthRate}%
@@ -158,10 +177,8 @@ const Dashboard = () => {
             </div>
 
             {/* 📊 Growth Bar Chart */}
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <h2 className="text-lg font-semibold mb-4">
-                Top Businesses - Growth Rate
-              </h2>
+            <div className="bg-white p-6 rounded-xl shadow-md transition-transform transform hover:scale-105">
+              <h2 className="text-lg font-semibold mb-4">Top Businesses - Growth Rate</h2>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={filteredData.slice(0, 10)}>
                   <XAxis
@@ -171,7 +188,7 @@ const Dashboard = () => {
                     height={60}
                   />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip content={<CustomTooltip />} />
                   <Legend />
                   <Bar dataKey="Growth_Rate (%)" fill="#6366F1">
                     {filteredData.map((_, index) => (
@@ -181,6 +198,7 @@ const Dashboard = () => {
                 </BarChart>
               </ResponsiveContainer>
             </div>
+
 
             {/* 📊 Revenue Growth Rate Chart */}
             <div className="bg-white p-6 rounded-xl shadow-md">
@@ -268,12 +286,15 @@ const Dashboard = () => {
                     stroke="#34D399"
                     strokeWidth={3}
                     dot={{ r: 4 }}
+                    animationBegin={300}
+                    animationDuration={1500}
+                    isAnimationActive={true}
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
 
-            
+
           </>
         )}
       </div>
