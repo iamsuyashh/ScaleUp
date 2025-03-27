@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request,  send_from_directory,jsonify, send_file
 from flask_cors import CORS
 import pandas as pd
 import numpy as np
@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static/dist", static_url_path="/")
 CORS(app)
 
 processed_data_store = {}
@@ -136,6 +136,17 @@ def export_data():
     df.to_csv(csv_file_path, index=False)
 
     return send_file(csv_file_path, as_attachment=True)
+
+# Serve Vite (React) app
+@app.route("/")
+def serve_react():
+    return send_from_directory(app.static_folder, "index.html")
+
+# Serve static files
+@app.route("/<path:path>")
+def serve_static(path):
+    return send_from_directory(app.static_folder, path)
+
 
 
 
