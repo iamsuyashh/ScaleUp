@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { Cloud } from "lucide-react";
 import { useNavigate } from "react-router-dom";

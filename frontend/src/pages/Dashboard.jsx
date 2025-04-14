@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import Navbar from "../components/NavigationBar";
 import Loading from "../components/Loading";
+import PropTypes from "prop-types";
 
 const COLORS = [
   "#6366F1",
@@ -32,8 +33,8 @@ const COLORS = [
 const Dashboard = () => {
   const [growthData, setGrowthData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [rmse, setRmse] = useState(null);
-  const [r2, setR2] = useState(null);
+  const [, setRmse] = useState(null);
+  const [, setR2] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filterRange, setFilterRange] = useState(20);
@@ -45,18 +46,34 @@ const Dashboard = () => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className=" p-3 rounded-lg shadow-lg border border-gray-200">
+        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
           <p className="font-semibold">{data.Business_Name}</p>
-          <p>Growth Rate: {data["Growth_Rate (%)"].toFixed(2)}%</p>
-          <p>Revenue Growth Rate: {data.Revenue_Growth_Rate.toFixed(2)}%</p>
-          <p>Asset Growth Rate: {data.Asset_Growth_Rate.toFixed(2)}%</p>
-          <p>Loan Dependency Ratio: {data.Loan_Dependency_Ratio.toFixed(2)}</p>
+          <p>Growth Rate: {data["Growth_Rate (%)"]?.toFixed(2) || 'N/A'}%</p>
+          <p>Revenue Growth Rate: {data.Revenue_Growth_Rate?.toFixed(2) || 'N/A'}%</p>
+          <p>Asset Growth Rate: {data.Asset_Growth_Rate?.toFixed(2) || 'N/A'}%</p>
+          <p>Loan Dependency Ratio: {data.Loan_Dependency_Ratio?.toFixed(2) || 'N/A'}</p>
         </div>
       );
     }
     return null;
   };
+  // PropTypes for CustomTooltip
+  CustomTooltip.propTypes = {
+    active: PropTypes.bool,
+    payload: PropTypes.arrayOf(
+      PropTypes.shape({
+        payload: PropTypes.shape({
+          Business_Name: PropTypes.string,
+          "Growth_Rate (%)": PropTypes.number,
+          Revenue_Growth_Rate: PropTypes.number,
+          Asset_Growth_Rate: PropTypes.number,
+          Loan_Dependency_Ratio: PropTypes.number,
+        }),
+      })
+    ),
+  };
 
+  // Fetch Data
   // Fetch Data
   useEffect(() => {
     const fetchProcessedData = async () => {
@@ -99,6 +116,18 @@ const Dashboard = () => {
       setTotalBusinesses(0);
     }
   }, [growthData, filterRange]);
+
+  // Add after useEffect blocks
+  // const safeData = React.useMemo(() => {
+  //   if (!filteredData || filteredData.length === 0) return [];
+  //   return filteredData.map(item => ({
+  //     ...item,
+  //     "Growth_Rate (%)": item["Growth_Rate (%)"] || 0,
+  //     Revenue_Growth_Rate: item.Revenue_Growth_Rate || 0,
+  //     Asset_Growth_Rate: item.Asset_Growth_Rate || 0,
+  //     Loan_Dependency_Ratio: item.Loan_Dependency_Ratio || 0
+  //   }));
+  // }, [filteredData]);
 
   // Export to CSV
   const exportToCSV = () => {
@@ -216,9 +245,13 @@ const Dashboard = () => {
                       height={60}
                     />
                     <YAxis />
-                    <Tooltip formatter={(value) => `${value.toFixed(2)}%`} />
+                    <Tooltip content={<CustomTooltip />} />
                     <Legend />
-                    <Bar dataKey="Revenue_Growth_Rate" fill="#34D399" />
+                    <Bar dataKey="Revenue_Growth_Rate" fill="#34D399">
+                      {filteredData.map((_, index) => (
+                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -269,32 +302,39 @@ const Dashboard = () => {
                   Growth Rate Trends
                 </h2>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={filteredData.slice(0, 20)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="Business_Name" hide />
-                    <YAxis>
-                      <Label
-                        angle={-90}
-                        position="insideLeft"
-                        style={{ textAnchor: "middle" }}
-                      >
-                        Growth Rate (%)
-                      </Label>
-                    </YAxis>
-                    <Tooltip />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="Growth_Rate (%)"
-                      stroke="#34D399"
-                      strokeWidth={3}
-                      dot={{ r: 4 }}
-                      animationBegin={300}
-                      animationDuration={1500}
-                      isAnimationActive={true}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+  {filteredData.length > 0 ? (
+    <LineChart data={filteredData.slice(0, 20)}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="Business_Name" hide />
+      <YAxis>
+        <Label
+          angle={-90}
+          position="insideLeft"
+          style={{ textAnchor: "middle" }}
+        >
+          Growth Rate (%)
+        </Label>
+      </YAxis>
+      <Tooltip content={<CustomTooltip />} />
+      <Legend />
+      <Line
+        type="monotone"
+        dataKey="Growth_Rate (%)"
+        stroke="#34D399"
+        strokeWidth={3}
+        dot={{ r: 4 }}
+        animationBegin={300}
+        animationDuration={1500}
+        isAnimationActive={true}
+      />
+    </LineChart>
+  ) : (
+    <div className="flex justify-center items-center h-full">
+      <p className="text-gray-500">No data available</p>
+    </div>
+  )}
+</ResponsiveContainer>
+
               </div>
             </div>
           </>
