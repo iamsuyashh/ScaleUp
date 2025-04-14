@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { Cloud } from "lucide-react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 
 const FileUploadComponent = () => {
     const { isSignedIn } = useUser();
     const navigate = useNavigate();
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState(null);
+    const [progress, setProgress] = useState(0);
 
     const handleFileInput = async (e) => {
         if (!isSignedIn) {
@@ -20,22 +21,26 @@ const FileUploadComponent = () => {
     
         setUploading(true);
         setError(null);
+        setProgress(10);
         const formData = new FormData();
         formData.append("file", file);
     
         try {
-            // Upload file to Flask
             const response = await fetch("http://localhost:5000/upload", {
                 method: "POST",
                 body: formData,
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setProgress(percentCompleted);
+                },
             });
             const result = await response.json();
     
             if (result.error) {
                 setError(result.error);
             } else {
-                // Store minimal info, then fetch full dataset in Dashboard
-                navigate("/dashboard");
+                setProgress(100);
+                setTimeout(() => navigate("/dashboard"), 500);
             }
         } catch (error) {
             setError("Upload failed. Please try again.");
@@ -58,7 +63,11 @@ const FileUploadComponent = () => {
                         onChange={handleFileInput} 
                     />
                 </label>
-                {uploading && <p className="text-gray-500 mt-2">Uploading...</p>}
+                {uploading && (
+                    <div className="mt-4 w-full bg-gray-200 rounded-full h-2.5">
+                        <div className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                    </div>
+                )}
                 {error && <p className="text-red-500 mt-2">{error}</p>}
             </div>
         </div>
