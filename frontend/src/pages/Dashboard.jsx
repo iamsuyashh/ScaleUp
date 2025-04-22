@@ -1,4 +1,4 @@
-import  { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -160,32 +160,32 @@ const Dashboard = () => {
       <Navbar />
       <div className="min-h-screen p-8">
         {loading ? (
-          <p className="text-center text-lg font-semibold"><Loading/></p>
+          <p className="text-center text-lg font-semibold"><Loading /></p>
         ) : error ? (
           <p className="text-red-500 text-center font-semibold">{error}</p>
         ) : (
           <>
             {/* 🎛️ Filter and Export Section */}
             <div className="bg-white p-4 rounded-xl shadow-md flex flex-col sm:flex-row sm:justify-between items-center gap-4 mb-6">
-  <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full">
-    <label className="text-lg font-semibold">Filter Growth Rate:</label>
-    <input
-      type="range"
-      min="5"
-      max="50"
-      value={filterRange}
-      onChange={(e) => setFilterRange(Number(e.target.value))}
-      className="w-full sm:w-40"
-    />
-    <span className="text-gray-700">{filterRange}%</span>
-  </div>
-  <button
-    onClick={exportToCSV}
-    className="bg-blue-600 text-white px-4 py-2 rounded-md transition-transform transform hover:scale-105 hover:bg-blue-700 w-full sm:w-auto"
-  >
-    Export to CSV
-  </button>
-</div>
+              <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full">
+                <label className="text-lg font-semibold">Filter Growth Rate:</label>
+                <input
+                  type="range"
+                  min="5"
+                  max="50"
+                  value={filterRange}
+                  onChange={(e) => setFilterRange(Number(e.target.value))}
+                  className="w-full sm:w-40"
+                />
+                <span className="text-gray-700">{filterRange}%</span>
+              </div>
+              <button
+                onClick={exportToCSV}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md transition-transform transform hover:scale-105 hover:bg-blue-700 w-full sm:w-auto"
+              >
+                Export to CSV
+              </button>
+            </div>
 
 
             {/* 📊 Summary Section */}
@@ -302,38 +302,38 @@ const Dashboard = () => {
                   Growth Rate Trends
                 </h2>
                 <ResponsiveContainer width="100%" height={300}>
-  {filteredData.length > 0 ? (
-    <LineChart data={filteredData.slice(0, 20)}>
-      <CartesianGrid strokeDasharray="3 3" />
-      <XAxis dataKey="Business_Name" hide />
-      <YAxis>
-        <Label
-          angle={-90}
-          position="insideLeft"
-          style={{ textAnchor: "middle" }}
-        >
-          Growth Rate (%)
-        </Label>
-      </YAxis>
-      <Tooltip content={<CustomTooltip />} />
-      <Legend />
-      <Line
-        type="monotone"
-        dataKey="Growth_Rate (%)"
-        stroke="#34D399"
-        strokeWidth={3}
-        dot={{ r: 4 }}
-        animationBegin={300}
-        animationDuration={1500}
-        isAnimationActive={true}
-      />
-    </LineChart>
-  ) : (
-    <div className="flex justify-center items-center h-full">
-      <p className="text-gray-500">No data available</p>
-    </div>
-  )}
-</ResponsiveContainer>
+                  {filteredData.length > 0 ? (
+                    <LineChart data={filteredData.slice(0, 20)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="Business_Name" hide />
+                      <YAxis>
+                        <Label
+                          angle={-90}
+                          position="insideLeft"
+                          style={{ textAnchor: "middle" }}
+                        >
+                          Growth Rate (%)
+                        </Label>
+                      </YAxis>
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="Growth_Rate (%)"
+                        stroke="#34D399"
+                        strokeWidth={3}
+                        dot={{ r: 4 }}
+                        animationBegin={300}
+                        animationDuration={1500}
+                        isAnimationActive={true}
+                      />
+                    </LineChart>
+                  ) : (
+                    <div className="flex justify-center items-center h-full">
+                      <p className="text-gray-500">No data available</p>
+                    </div>
+                  )}
+                </ResponsiveContainer>
 
               </div>
             </div>

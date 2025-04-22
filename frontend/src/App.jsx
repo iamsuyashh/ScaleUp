@@ -1,17 +1,16 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
 import Dashboard from './pages/Dashboard';
-import Home from './pages/Home';
+import LandingPage from './pages/LandingPage';
 import SignInPage from './pages/SignIn';
 
   
-const App = () =>
-   {
+const App = () => {
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/sign-in" element={<SignInPage />} />
           <Route
             path="/dashboard"
