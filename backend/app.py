@@ -118,8 +118,6 @@ def feature_importance():
 
     return jsonify({"feature_importance": importance_data})
 
-
-# 📤 Export Processed Data as CSV
 # 📤 Export Processed Data as CSV
 @app.route('/export-data', methods=['GET'])
 def export_data():
@@ -139,23 +137,6 @@ def export_data():
 
 
 
-# 🔄 Compare Business Growth
-@app.route('/compare-business', methods=['POST'])
-def compare_business():
-    """ Compare growth of selected businesses """
-    data = request.json
-    selected_businesses = data.get("businesses", [])
-
-    if "processed_data" not in processed_data_store:
-        return jsonify({"error": "No processed data available"}), 400
-
-    df = pd.DataFrame(processed_data_store["processed_data"])
-    comparison_data = df[df["Business_Name"].isin(selected_businesses)].to_dict(orient="records")
-
-    if not comparison_data:
-        return jsonify({"error": "No matching businesses found!"}), 400
-
-    return jsonify({"comparison_data": comparison_data})
 
 
 # 📤 Predict Growth with New Data
@@ -190,45 +171,7 @@ def predict():
         return jsonify({"error": str(e)}), 500
 
 
-# 📥 Upload New Data for Retraining
-@app.route('/upload-new-data', methods=['POST'])
-def upload_new_data():
-    try:
-        file = request.files.get('file')
-        if not file:
-            return jsonify({"error": "No file received"}), 400
 
-        df_new = pd.read_csv(file)
-
-        # Basic feature engineering for new data
-        df_new["Revenue_Growth_Rate"] = (df_new["Annual_Revenue_Year3"] - df_new["Annual_Revenue_Year1"]) / df_new["Annual_Revenue_Year1"]
-        df_new["Asset_Growth_Rate"] = (df_new["Assets_Year3"] - df_new["Assets_Year1"]) / df_new["Assets_Year1"]
-        df_new["Loan_Dependency_Ratio"] = df_new["Loan_Amount_Year3"] / df_new["Annual_Revenue_Year3"]
-        df_new = df_new.dropna()
-
-        # Encode categorical features
-        categorical_cols = ["Industry_Type", "Business_Type", "State", "District"]
-        for col in categorical_cols:
-            le = LabelEncoder()
-            df_new[col] = le.fit_transform(df_new[col])
-
-        # Feature selection
-        features = ["Employees", "Years_in_Operation", "Credit_Score",
-                    "Revenue_Growth_Rate", "Asset_Growth_Rate", "Loan_Dependency_Ratio",
-                    "Industry_Type", "Business_Type", "State", "District"]
-
-        X_new = df_new[features]
-        scaler = StandardScaler()
-        X_scaled_new = scaler.fit_transform(X_new)
-
-        # Predictions for new data
-        predictions_new = model_store["model"].predict(X_scaled_new)
-        df_new["Growth_Rate (%)"] = predictions_new
-
-        return jsonify({"uploaded_data": df_new.to_dict(orient="records")})
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':

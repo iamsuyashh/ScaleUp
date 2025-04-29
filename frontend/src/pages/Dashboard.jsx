@@ -12,6 +12,8 @@ import {
   CartesianGrid,
   Label,
   Cell,
+  PieChart,
+  Pie,
 } from "recharts";
 import Navbar from "../components/NavigationBar";
 import Loading from "../components/Loading";
@@ -74,7 +76,6 @@ const Dashboard = () => {
   };
 
   // Fetch Data
-  // Fetch Data
   useEffect(() => {
     const fetchProcessedData = async () => {
       try {
@@ -117,18 +118,6 @@ const Dashboard = () => {
     }
   }, [growthData, filterRange]);
 
-  // Add after useEffect blocks
-  // const safeData = React.useMemo(() => {
-  //   if (!filteredData || filteredData.length === 0) return [];
-  //   return filteredData.map(item => ({
-  //     ...item,
-  //     "Growth_Rate (%)": item["Growth_Rate (%)"] || 0,
-  //     Revenue_Growth_Rate: item.Revenue_Growth_Rate || 0,
-  //     Asset_Growth_Rate: item.Asset_Growth_Rate || 0,
-  //     Loan_Dependency_Ratio: item.Loan_Dependency_Ratio || 0
-  //   }));
-  // }, [filteredData]);
-
   // Export to CSV
   const exportToCSV = () => {
     if (filteredData.length === 0) {
@@ -153,6 +142,192 @@ const Dashboard = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  
+
+  const FeatureImportance = () => {
+    const [featureData, setFeatureData] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      const fetchFeatureImportance = async () => {
+        try {
+          const response = await fetch("http://localhost:5000/get-feature-importance");
+          const data = await response.json();
+          
+          if (!data.error) {
+            // Transform the data for the pie chart
+            const formattedData = Object.entries(data.feature_importance).map(([name, value]) => ({
+              name,
+              value: parseFloat((value * 100).toFixed(2))
+            })).sort((a, b) => b.value - a.value);
+            
+            setFeatureData(formattedData);
+          }
+        } catch (error) {
+          console.error("Failed to fetch feature importance:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchFeatureImportance();
+    }, []);
+
+    return (
+      <div className="bg-white p-6 rounded-xl shadow-md lg:col-span-2 transition-transform transform hover:scale-105">
+        <h2 className="text-lg font-semibold mb-4">Growth Factors Analysis</h2>
+        <p className="text-sm text-gray-600 mb-4">Visualizes the relative importance of each business factor in predicting growth performance</p>
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={featureData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name, value }) => `${name}: ${value}%`}
+              >
+                {featureData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value) => `${value}%`} />
+              <Legend layout="vertical" align="right" verticalAlign="middle" />
+            </PieChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+    );
+  };
+
+  const GrowthPrediction = () => {
+    const [formData, setFormData] = useState({
+      Employees: 10,
+      Years_in_Operation: 5,
+      Credit_Score: 700,
+      Revenue_Growth_Rate: 0.1,
+      Asset_Growth_Rate: 0.08,
+      Loan_Dependency_Ratio: 0.2,
+      Industry_Type: 0,
+      Business_Type: 0,
+      State: 0,
+      District: 0
+    });
+    
+    const [prediction, setPrediction] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
+  
+    const handleInputChange = (e) => {
+      const { name, value } = e.target;
+      setFormData({
+        ...formData,
+        [name]: parseFloat(value)
+      });
+    };
+  
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setSubmitting(true);
+      
+      try {
+        const response = await fetch("http://localhost:5000/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+        
+        const data = await response.json();
+        
+        if (data.predicted_growth) {
+          setPrediction(data.predicted_growth);
+        }
+      } catch (error) {
+        console.error("Error predicting growth:", error);
+      }
+      
+      setSubmitting(false);
+    };
+  
+    return (
+      <div className="bg-white p-6 rounded-xl shadow-md lg:col-span-2 transition-transform transform hover:scale-105">
+        <h2 className="text-lg font-semibold mb-4">Predict Business Growth</h2>
+        
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Employees</label>
+            <input
+              type="number"
+              name="Employees"
+              value={formData.Employees}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Years in Operation</label>
+            <input
+              type="number"
+              name="Years_in_Operation"
+              value={formData.Years_in_Operation}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Credit Score</label>
+            <input
+              type="number"
+              name="Credit_Score"
+              value={formData.Credit_Score}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Revenue Growth Rate</label>
+            <input
+              type="number"
+              step="0.01"
+              name="Revenue_Growth_Rate"
+              value={formData.Revenue_Growth_Rate}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            />
+          </div>
+          
+          {/* Add other input fields */}
+          
+          <button
+            type="submit"
+            disabled={submitting}
+            className="md:col-span-2 px-4 py-2 bg-indigo-600 text-white rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {submitting ? "Predicting..." : "Predict Growth"}
+          </button>
+        </form>
+        
+        {prediction !== null && (
+          <div className="mt-6 p-4 bg-indigo-50 rounded-lg">
+            <h3 className="font-medium text-lg">Predicted Growth Rate:</h3>
+            <div className="text-3xl font-bold text-indigo-600 mt-2">{prediction.toFixed(2)}%</div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -198,10 +373,6 @@ const Dashboard = () => {
                 <p className="text-gray-700 font-semibold">Avg. Growth Rate</p>
                 <p className="text-2xl font-bold">{avgGrowthRate}%</p>
               </div>
-              {/* <div className="bg-white p-4 rounded-xl shadow-md text-center">
-                <p className="text-gray-700 font-semibold">Data Accuracy (R²)</p>
-                <p className="text-2xl font-bold">{r2?.toFixed(3)}</p>
-              </div> */}
             </div>
 
             {/* 📊 Charts Section */}
@@ -334,8 +505,13 @@ const Dashboard = () => {
                     </div>
                   )}
                 </ResponsiveContainer>
-
               </div>
+
+              {/* 📈 Feature Importance */}
+              <FeatureImportance />
+
+              {/* 📈 Growth Prediction */}
+              <GrowthPrediction />
             </div>
           </>
         )}
